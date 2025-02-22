@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
-import { InsertRecipe, insertRecipeSchema, type Recipe, type WeightPoint } from "@shared/schema";
+import { InsertRecipe, insertRecipeSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import TimerDisplay from "@/components/coffee/timer-display";
@@ -22,9 +22,9 @@ export default function RecipeView() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [currentTime, setCurrentTime] = useState(0);
-  const [scale, setScale] = useState<number>(1);
+  const [scale, setScale] = useState(1);
 
-  const { data: recipes, isLoading } = useQuery<Recipe[]>({
+  const { data: recipes } = useQuery({
     queryKey: ["/api/recipes"],
   });
 
@@ -32,22 +32,18 @@ export default function RecipeView() {
 
   const form = useForm<InsertRecipe>({
     resolver: zodResolver(insertRecipeSchema),
-    defaultValues: {
-      name: recipe?.name ?? "",
-      description: recipe?.description ?? "",
-      totalTime: recipe?.totalTime ?? 180,
-      targetPoints: recipe?.targetPoints ?? [{ time: 0, weight: 0 }]
+    defaultValues: recipe || {
+      name: "",
+      description: "",
+      totalTime: 180,
+      targetPoints: [{ time: 0, weight: 0 }]
     },
   });
 
+  // Update form when recipe data is loaded
   useEffect(() => {
     if (recipe) {
-      form.reset({
-        name: recipe.name,
-        description: recipe.description,
-        totalTime: recipe.totalTime,
-        targetPoints: recipe.targetPoints
-      });
+      form.reset(recipe);
     }
   }, [recipe, form]);
 
@@ -64,21 +60,19 @@ export default function RecipeView() {
       const res = await apiRequest("PATCH", `/api/recipes/${recipe.id}`, payload);
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
       toast({
         title: "Recipe updated",
         description: "Your changes have been saved"
       });
-      if (data && slugify(data.name) !== params?.name) {
-        setLocation(`/recipes/${slugify(data.name)}`);
-      }
     }
   });
 
   const addPoint = () => {
-    const points = form.getValues("targetPoints");
-    const lastTime = points.length > 0 ? points[points.length - 1].time : 0;
+    const lastTime = fields.length > 0 
+      ? Math.max(...fields.map(field => field.time))
+      : 0;
     append({ time: lastTime + 30, weight: 0 });
   };
 
@@ -101,35 +95,8 @@ export default function RecipeView() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded w-32 mb-4"></div>
-          <div className="h-64 bg-muted rounded"></div>
-        </div>
-      </div>
-    );
-  }
-
   if (!recipe) {
-    return (
-      <div className="container mx-auto p-4">
-        <Button
-          variant="ghost"
-          className="mb-4"
-          onClick={() => setLocation("/")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Recipes
-        </Button>
-        <Card>
-          <CardContent className="py-8">
-            <p className="text-center text-muted-foreground">Recipe not found</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -152,7 +119,7 @@ export default function RecipeView() {
         <TabsContent value="run" className="space-y-4">
           <div className="flex items-center gap-4">
             <div className="grow">
-              <FormLabel htmlFor="scale">Recipe Scale</FormLabel>
+              <label htmlFor="scale">Recipe Scale</label>
               <Input
                 id="scale"
                 type="number"
@@ -249,14 +216,14 @@ export default function RecipeView() {
                         <FormField
                           control={form.control}
                           name={`targetPoints.${index}.time`}
-                          render={({ field: timeField }) => (
+                          render={({ field }) => (
                             <FormItem>
                               <FormLabel>Time (s)</FormLabel>
                               <FormControl>
                                 <Input
                                   type="number"
-                                  {...timeField}
-                                  onChange={e => timeField.onChange(parseInt(e.target.value))}
+                                  {...field}
+                                  onChange={e => field.onChange(parseInt(e.target.value))}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -266,14 +233,14 @@ export default function RecipeView() {
                         <FormField
                           control={form.control}
                           name={`targetPoints.${index}.weight`}
-                          render={({ field: weightField }) => (
+                          render={({ field }) => (
                             <FormItem>
                               <FormLabel>Weight (g)</FormLabel>
                               <FormControl>
                                 <Input
                                   type="number"
-                                  {...weightField}
-                                  onChange={e => weightField.onChange(parseInt(e.target.value))}
+                                  {...field}
+                                  onChange={e => field.onChange(parseInt(e.target.value))}
                                 />
                               </FormControl>
                               <FormMessage />

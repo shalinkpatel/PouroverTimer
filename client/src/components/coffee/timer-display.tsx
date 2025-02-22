@@ -70,19 +70,3 @@ export default function TimerDisplay({ recipe, onTimeUpdate, scale = 1 }: TimerD
     </Card>
   );
 }
-import React from 'react';
-
-interface TimerDisplayProps {
-  seconds: number;
-}
-
-export function TimerDisplay({ seconds }: TimerDisplayProps) {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-
-  return (
-    <div className="text-4xl font-mono">
-      {String(minutes).padStart(2, '0')}:{String(remainingSeconds).padStart(2, '0')}
-    </div>
-  );
-}
