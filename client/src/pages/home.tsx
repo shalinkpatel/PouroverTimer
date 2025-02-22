@@ -10,7 +10,7 @@ export default function Home() {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>();
   const [currentTime, setCurrentTime] = useState(0);
 
-  const { data: recipes } = useQuery({
+  const { data: recipes } = useQuery<Recipe[]>({
     queryKey: ["/api/recipes"],
   });
 

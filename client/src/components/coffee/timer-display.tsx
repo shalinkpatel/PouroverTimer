@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Play, Pause, RotateCcw } from "lucide-react";
@@ -13,7 +14,7 @@ export default function TimerDisplay({ recipe, onTimeUpdate }: TimerDisplayProps
   const { time, isRunning, start, pause, reset } = useTimer();
 
   // Update parent with current time
-  React.useEffect(() => {
+  useEffect(() => {
     onTimeUpdate(time);
   }, [time, onTimeUpdate]);
 
