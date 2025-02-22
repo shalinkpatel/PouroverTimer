@@ -2,13 +2,15 @@ import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import { type Recipe, type WeightPoint } from "@shared/schema";
 import { Card } from "@/components/ui/card";
+import { scaleRecipeWeights } from "@/lib/utils";
 
 interface WeightGraphProps {
   recipe: Recipe;
   currentTime: number;
+  scale?: number;
 }
 
-export default function WeightGraph({ recipe, currentTime }: WeightGraphProps) {
+export default function WeightGraph({ recipe, currentTime, scale = 1 }: WeightGraphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -25,12 +27,15 @@ export default function WeightGraph({ recipe, currentTime }: WeightGraphProps) {
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
+    // Scale the target points
+    const scaledPoints = scaleRecipeWeights(recipe.targetPoints, scale);
+
     // Create scales
     const xScale = d3.scaleLinear()
       .domain([0, recipe.totalTime])
       .range([0, width]);
 
-    const maxWeight = d3.max(recipe.targetPoints, d => d.weight) || 0;
+    const maxWeight = d3.max(scaledPoints, d => d.weight) || 0;
     const yScale = d3.scaleLinear()
       .domain([0, maxWeight])
       .range([height, 0]);
@@ -50,7 +55,7 @@ export default function WeightGraph({ recipe, currentTime }: WeightGraphProps) {
 
     // Draw target line
     svg.append("path")
-      .datum(recipe.targetPoints)
+      .datum(scaledPoints)
       .attr("fill", "none")
       .attr("stroke", "hsl(var(--primary))")
       .attr("stroke-width", 2)
@@ -67,7 +72,7 @@ export default function WeightGraph({ recipe, currentTime }: WeightGraphProps) {
         .attr("stroke-width", 2)
         .attr("stroke-dasharray", "4,4");
     }
-  }, [recipe, currentTime]);
+  }, [recipe, currentTime, scale]);
 
   return (
     <Card className="p-4">
