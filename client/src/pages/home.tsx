@@ -12,6 +12,7 @@ import RecipeForm from "@/components/coffee/recipe-form";
 import { type Recipe } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { slugify } from "@/lib/utils";
 
 export default function Home() {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>();
@@ -69,7 +70,10 @@ export default function Home() {
               value={selectedRecipeId} 
               onValueChange={val => {
                 setSelectedRecipeId(val);
-                setLocation(`/recipe/${val}`);
+                const recipe = recipes?.find(r => r.id.toString() === val);
+                if (recipe) {
+                  setLocation(`/recipes/${slugify(recipe.name)}`);
+                }
               }}
             >
               <SelectTrigger className="flex-1">

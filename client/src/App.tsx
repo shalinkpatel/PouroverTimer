@@ -10,7 +10,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/recipe/:id" component={RecipeView} />
+      <Route path="/recipes/:name" component={RecipeView} />
       <Route component={NotFound} />
     </Switch>
   );
