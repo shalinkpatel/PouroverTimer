@@ -269,9 +269,33 @@ export default function RecipeView() {
                     ))}
                   </div>
 
-                  <Button type="submit" disabled={updateRecipe.isPending}>
-                    Save Changes
-                  </Button>
+                  <div className="flex gap-4">
+                    <Button type="submit" disabled={updateRecipe.isPending}>
+                      Save Changes
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={async () => {
+                        try {
+                          await apiRequest("DELETE", `/api/recipes/${recipe.id}`);
+                          queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
+                          setLocation("/");
+                          toast({
+                            title: "Recipe deleted",
+                            description: "The recipe has been removed"
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Error",
+                            description: "Failed to delete recipe",
+                            variant: "destructive"
+                          });
+                        }
+                      }}
+                    >
+                      Delete Recipe
+                    </Button>
+                  </div>
                 </form>
               </Form>
             </CardContent>
