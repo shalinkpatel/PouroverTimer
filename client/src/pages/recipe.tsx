@@ -125,8 +125,11 @@ export default function RecipeView() {
                 type="number"
                 min={0.1}
                 step={0.1}
-                value={scale}
-                onChange={handleScaleChange}
+                value={scale || ''}
+                onChange={(e) => {
+                  const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                  handleScaleChange(e as any);
+                }}
               />
             </div>
             <div className="text-sm text-muted-foreground pt-6">
