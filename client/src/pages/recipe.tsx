@@ -33,17 +33,21 @@ export default function RecipeView() {
   const form = useForm<InsertRecipe>({
     resolver: zodResolver(insertRecipeSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      totalTime: 180,
-      targetPoints: [{ time: 0, weight: 0 }]
+      name: recipe?.name ?? "",
+      description: recipe?.description ?? "",
+      totalTime: recipe?.totalTime ?? 180,
+      targetPoints: recipe?.targetPoints ?? [{ time: 0, weight: 0 }]
     },
   });
 
-  // Update form when recipe data is loaded
   useEffect(() => {
     if (recipe) {
-      form.reset(recipe);
+      form.reset({
+        name: recipe.name,
+        description: recipe.description,
+        totalTime: recipe.totalTime,
+        targetPoints: recipe.targetPoints
+      });
     }
   }, [recipe, form]);
 
@@ -66,7 +70,6 @@ export default function RecipeView() {
         title: "Recipe updated",
         description: "Your changes have been saved"
       });
-      // Update URL if name changed
       if (data && slugify(data.name) !== params?.name) {
         setLocation(`/recipes/${slugify(data.name)}`);
       }
@@ -74,8 +77,8 @@ export default function RecipeView() {
   });
 
   const addPoint = () => {
-    const lastPoint = fields[fields.length - 1] as WeightPoint | undefined;
-    const lastTime = lastPoint?.time ?? 0;
+    const points = form.getValues("targetPoints");
+    const lastTime = points.length > 0 ? points[points.length - 1].time : 0;
     append({ time: lastTime + 30, weight: 0 });
   };
 
@@ -241,59 +244,54 @@ export default function RecipeView() {
                       </Button>
                     </div>
 
-                    {fields.map((field, index) => {
-                      const fieldValue = field as WeightPoint;
-                      return (
-                        <div key={field.id} className="flex gap-4 items-end">
-                          <FormField
-                            control={form.control}
-                            name={`targetPoints.${index}.time`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Time (s)</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    {...field}
-                                    value={field.value}
-                                    onChange={e => field.onChange(parseInt(e.target.value))}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name={`targetPoints.${index}.weight`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Weight (g)</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    {...field}
-                                    value={field.value}
-                                    onChange={e => field.onChange(parseInt(e.target.value))}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          {index > 0 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              onClick={() => remove(index)}
-                            >
-                              <Trash2 className="w-4 w-4" />
-                            </Button>
+                    {fields.map((field, index) => (
+                      <div key={field.id} className="flex gap-4 items-end">
+                        <FormField
+                          control={form.control}
+                          name={`targetPoints.${index}.time`}
+                          render={({ field: timeField }) => (
+                            <FormItem>
+                              <FormLabel>Time (s)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  {...timeField}
+                                  onChange={e => timeField.onChange(parseInt(e.target.value))}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
                           )}
-                        </div>
-                      );
-                    })}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`targetPoints.${index}.weight`}
+                          render={({ field: weightField }) => (
+                            <FormItem>
+                              <FormLabel>Weight (g)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  {...weightField}
+                                  onChange={e => weightField.onChange(parseInt(e.target.value))}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {index > 0 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => remove(index)}
+                          >
+                            <Trash2 className="w-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
                   </div>
 
                   <Button type="submit" disabled={updateRecipe.isPending}>
