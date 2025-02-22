@@ -4,7 +4,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { InsertRecipe, insertRecipeSchema, type WeightPoint } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -27,7 +27,10 @@ export default function RecipeForm() {
     }
   });
 
-  const { fields, append, remove } = form.control._fields.targetPoints || [];
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "targetPoints"
+  });
 
   const createRecipe = useMutation({
     mutationFn: async (data: InsertRecipe) => {
@@ -48,8 +51,9 @@ export default function RecipeForm() {
   });
 
   const addPoint = () => {
-    const points = form.getValues("targetPoints") || [];
-    const lastTime = points.length > 0 ? Math.max(...points.map(p => p.time)) : 0;
+    const lastTime = fields.length > 0 
+      ? Math.max(...fields.map(field => field.time))
+      : 0;
     append({ time: lastTime + 30, weight: 0 });
   };
 
@@ -131,8 +135,8 @@ export default function RecipeForm() {
                 </Button>
               </div>
 
-              {form.getValues("targetPoints")?.map((_, index) => (
-                <div key={index} className="flex gap-4 items-end">
+              {fields.map((field, index) => (
+                <div key={field.id} className="flex gap-4 items-end">
                   <FormField
                     control={form.control}
                     name={`targetPoints.${index}.time`}
