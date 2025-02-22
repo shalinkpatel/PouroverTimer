@@ -88,10 +88,18 @@ export default function RecipeView() {
     updateRecipe.mutate(data);
   };
 
+  const [lastValidScale, setLastValidScale] = useState(1);
+  
   const handleScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value === "" ? 1 : parseFloat(e.target.value);
+    if (e.target.value === "") {
+      setScale(lastValidScale);
+      return;
+    }
+    
+    const value = parseFloat(e.target.value);
     if (!isNaN(value) && value > 0) {
       setScale(value);
+      setLastValidScale(value);
     }
   };
 
@@ -125,11 +133,8 @@ export default function RecipeView() {
                 type="number"
                 min={0.1}
                 step={0.1}
-                value={scale || ''}
-                onChange={(e) => {
-                  const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
-                  handleScaleChange(e as any);
-                }}
+                value={scale}
+                onChange={handleScaleChange}
               />
             </div>
             <div className="text-sm text-muted-foreground pt-6">
