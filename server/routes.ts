@@ -33,5 +33,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/recipes/:id", async (req, res) => {
+    try {
+      await storage.deleteRecipe(Number(req.params.id));
+      res.status(204).send();
+    } catch (err) {
+      res.status(500).json({ message: "Failed to delete recipe" });
+    }
+  });
+
+  app.patch("/api/recipes/:id", async (req, res) => {
+    try {
+      const recipeData = insertRecipeSchema.parse(req.body);
+      const recipe = await storage.updateRecipe(Number(req.params.id), recipeData);
+      if (!recipe) {
+        res.status(404).json({ message: "Recipe not found" });
+        return;
+      }
+      res.json(recipe);
+    } catch (err) {
+      if (err instanceof ZodError) {
+        res.status(400).json({ message: "Invalid recipe data", errors: err.errors });
+        return;
+      }
+      throw err;
+    }
+  });
+
   return createServer(app);
 }

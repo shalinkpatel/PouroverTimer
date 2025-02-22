@@ -6,6 +6,8 @@ export interface IStorage {
   getRecipes(): Promise<Recipe[]>;
   getRecipe(id: number): Promise<Recipe | undefined>;
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
+  deleteRecipe(id: number): Promise<void>;
+  updateRecipe(id: number, recipe: InsertRecipe): Promise<Recipe | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -27,6 +29,24 @@ export class DatabaseStorage implements IStorage {
         totalTime: insertRecipe.totalTime,
         targetPoints: [...insertRecipe.targetPoints]
       })
+      .returning();
+    return recipe;
+  }
+
+  async deleteRecipe(id: number): Promise<void> {
+    await db.delete(recipes).where(eq(recipes.id, id));
+  }
+
+  async updateRecipe(id: number, updateRecipe: InsertRecipe): Promise<Recipe | undefined> {
+    const [recipe] = await db
+      .update(recipes)
+      .set({
+        name: updateRecipe.name,
+        description: updateRecipe.description,
+        totalTime: updateRecipe.totalTime,
+        targetPoints: [...updateRecipe.targetPoints]
+      })
+      .where(eq(recipes.id, id))
       .returning();
     return recipe;
   }
