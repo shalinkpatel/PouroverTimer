@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
-import { InsertRecipe, insertRecipeSchema } from "@shared/schema";
+import { InsertRecipe, insertRecipeSchema, type Recipe } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import TimerDisplay from "@/components/coffee/timer-display";
@@ -22,9 +22,9 @@ export default function RecipeView() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [currentTime, setCurrentTime] = useState(0);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState<number>(1);
 
-  const { data: recipes } = useQuery({
+  const { data: recipes } = useQuery<Recipe[]>({
     queryKey: ["/api/recipes"],
   });
 
@@ -71,7 +71,7 @@ export default function RecipeView() {
 
   const addPoint = () => {
     const lastTime = fields.length > 0 
-      ? Math.max(...fields.map(field => field.time))
+      ? Math.max(...fields.map(field => (field as { time: number }).time))
       : 0;
     append({ time: lastTime + 30, weight: 0 });
   };
@@ -119,7 +119,7 @@ export default function RecipeView() {
         <TabsContent value="run" className="space-y-4">
           <div className="flex items-center gap-4">
             <div className="grow">
-              <label htmlFor="scale">Recipe Scale</label>
+              <FormLabel htmlFor="scale">Recipe Scale</FormLabel>
               <Input
                 id="scale"
                 type="number"
@@ -215,7 +215,7 @@ export default function RecipeView() {
                       <div key={field.id} className="flex gap-4 items-end">
                         <FormField
                           control={form.control}
-                          name={`targetPoints.${index}.time`}
+                          name={`targetPoints.${index}.time` as const}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Time (s)</FormLabel>
@@ -232,7 +232,7 @@ export default function RecipeView() {
                         />
                         <FormField
                           control={form.control}
-                          name={`targetPoints.${index}.weight`}
+                          name={`targetPoints.${index}.weight` as const}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Weight (g)</FormLabel>
