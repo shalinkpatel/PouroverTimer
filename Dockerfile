@@ -24,6 +24,10 @@ COPY . .
 # Build application
 RUN npm run build
 
+# Show the contents of the dist directory for debugging
+RUN ls -la dist/
+RUN ls -la dist/public/
+
 # Production stage
 FROM base
 
@@ -31,6 +35,10 @@ FROM base
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package*.json ./
+
+# Show the contents of the dist directory in final image for debugging
+RUN ls -la dist/
+RUN ls -la dist/public/
 
 EXPOSE 5000
 ENV NODE_ENV="production"
